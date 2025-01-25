@@ -7,7 +7,7 @@ Trello : https://trello.com/b/FLesUvZ5/se459rogue
 
 ## Project Members
 
-| Member | Area | Saying        |
+| Member | Background | Saying        |
 | ------ | ---- |---------------|
 | Adarsh, Purushothama Reddy | Undecided |               |
 | Muhammad Sameel, Shahid | Undecidede |               |
