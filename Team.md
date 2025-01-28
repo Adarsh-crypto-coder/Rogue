@@ -12,7 +12,7 @@ Trello : https://trello.com/b/FLesUvZ5/se459rogue
 | Adarsh, Purushothama Reddy | Undecided |               |
 | Muhammad Sameel, Shahid | Undecidede |               |
 | Shubham Parshuram, Sawant | Undecided |               |
-| Suhwan, Kim | Undecided | Hi-yo Silver! |
+| Suhwan, Kim | Master's degree student in computer science at Depaul University from South Korea. Stuck on Java, Python, Pl/SQL, C, C++, and Rust... | Hi-yo Silver! |
 
 ## Conflict Resolution
 
