@@ -3,7 +3,8 @@
 ## Purpose
 
 This is code associated with SE359/SE459 Agile software development group project for 'Rogue' game dev.
-/nTrello : https://trello.com/b/FLesUvZ5/se459rogue
+
+Trello : https://trello.com/b/FLesUvZ5/se459rogue
 
 ## Project Members
 
@@ -12,7 +13,7 @@ This is code associated with SE359/SE459 Agile software development group projec
 | Adarsh, Purushothama Reddy | Undecided |               |
 | Muhammad Sameel, Shahid | Undecidede |               |
 | Shubham Parshuram, Sawant | Undecided |               |
-| Suhwan, Kim | Master's degree student in computer science at Depaul University from South Korea. /nStuck on Java, Python, Pl/SQL, C, C++, and Rust... | Hi-yo Silver! |
+| Suhwan, Kim | Master's degree student in computer science at Depaul University from South Korea. Stuck on Java, Python, Pl/SQL, C, C++, and Rust... | Hi-yo Silver! |
 
 ## Conflict Resolution
 
