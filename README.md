@@ -13,8 +13,11 @@ Use an Agile development approach with meetings and Scrum.
 ## Communication Mechanism
 
 Discord   : Use Discord for usual meetings and exchanges of ideas.
+
 Zoom      : Use zoom for scheduling and regular meetings.
+
 Trello    : Coordinate development schedules and task status with Trello.
+
 GitHub    : Upload and manage code on GitHub.
 
 ## Decisions Made
