@@ -17,7 +17,7 @@ import javax.swing.text.*;
  * TODO: We haven't implemented the Player UI functionality yet!
  * 
  * Author : Suhwan Kim
- * Date : Feb 3, 2025
+ * Date : Feb 8, 2025
  */
 public class Main extends JFrame implements KeyListener {
     private Dungeon dungeon;
