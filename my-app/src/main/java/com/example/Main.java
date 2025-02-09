@@ -58,18 +58,16 @@ public class Main extends JFrame implements KeyListener {
 
     private void updateMapDisplay() {
         try {
-            document.remove(0, document.getLength()); // 기존 텍스트 삭제
+            document.remove(0, document.getLength());
             char[][] map = dungeon.getMap();
             int playerX = player.getX();
             int playerY = player.getY();
     
-            // 플레이어 주변의 맵만 표시 (10x10 크기)
-            int startX = playerX - 5; // 플레이어를 중앙으로 오도록 조정
+            int startX = playerX - 5;
             int startY = playerY - 5;
             int endX = playerX + 5;
             int endY = playerY + 5;
     
-            // 맵 범위를 벗어나지 않도록 조정
             if (startX < 0) {
                 endX += -startX;
                 startX = 0;
