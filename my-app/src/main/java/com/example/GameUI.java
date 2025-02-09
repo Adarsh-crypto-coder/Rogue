@@ -5,7 +5,7 @@ package com.example;
  * For Splint 2: Outputting the game to the screen! <- This is important.
  * 
  * Authot : Suhwan Kim
- * Date : Feb 3, 2025
+ * Date : Feb 8, 2025
  */
 public class GameUI {
     public void printMap(char[][] map) {
@@ -14,7 +14,7 @@ public class GameUI {
         }
     }
 
-    public void printStats(int hp, int level) {
-        System.out.println("HP: " + hp + " | Level: " + level);
+    public void printStats(int hp, int hunger) {
+        System.out.println("HP: " + hp + " | Hunger: " + hunger);
     }
 }
