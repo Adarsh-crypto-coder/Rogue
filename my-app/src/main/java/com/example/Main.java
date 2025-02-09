@@ -14,7 +14,7 @@ import javax.swing.text.*;
  * GameUI.java  : Output of the game's UI and state.
  * 
  * Author : Suhwan Kim
- * Date : Feb 3, 2025
+ * Date : Feb 8, 2025
  */
 public class Main extends JFrame implements KeyListener {
     private Dungeon dungeon;
