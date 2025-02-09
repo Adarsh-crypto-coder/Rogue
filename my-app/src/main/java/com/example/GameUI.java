@@ -3,6 +3,7 @@ package com.example;
 /*
  * Code for the game's UI and screen output.
  * For Splint 2: Outputting the game to the screen! <- This is important.
+ * Not Use Now...
  * 
  * Authot : Suhwan Kim
  * Date : Feb 8, 2025
