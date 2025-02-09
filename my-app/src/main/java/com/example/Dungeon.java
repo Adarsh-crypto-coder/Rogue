@@ -59,7 +59,7 @@ public class Dungeon {
             }
         }
     
-        // Connect Rooms
+        // 방 연결
         for (int i = 1; i < rooms.size(); i++) {
             Room prevRoom = rooms.get(i - 1);
             Room currentRoom = rooms.get(i);
@@ -69,7 +69,7 @@ public class Dungeon {
     
 
     private void carveRoom(Room room) {
-        // Create Walls
+        // 방의 벽 생성
         for (int y = room.y; y < room.y + room.height; y++) {
             for (int x = room.x; x < room.x + room.width; x++) {
                 if (y == room.y || y == room.y + room.height - 1 || x == room.x || x == room.x + room.width - 1) {
