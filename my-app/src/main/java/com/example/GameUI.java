@@ -1,20 +1,25 @@
 package com.example;
 
-/*
- * Code for the game's UI and screen output.
- * For Splint 2: Outputting the game to the screen! <- This is important.
- * 
- * Authot : Suhwan Kim
- * Date : Feb 3, 2025
- */
 public class GameUI {
+
     public void printMap(char[][] map) {
+        System.out.println("\n=== Dungeon Map ===");
         for (char[] row : map) {
-            System.out.println(row);
+            System.out.println(new String(row)); // ✅ Correctly prints the map
         }
+        System.out.println("===================\n");
     }
 
-    public void printStats(int hp, int level) {
-        System.out.println("HP: " + hp + " | Level: " + level);
+    public void printStats(int hp, double hunger) {
+        System.out.println("💖 HP: " + hp + " | 🍖 Hunger: " + String.format("%.2f", hunger) + "%");
+    }
+
+    // ✅ New method to display full player stats
+    public void printFullStats(int hp, double hunger, int level, int strength, int gold, int armor) {
+        System.out.println("\n=== Player Stats ===");
+        System.out.println("💖 HP: " + hp + " | 🍖 Hunger: " + String.format("%.2f", hunger) + "%");
+        System.out.println("🎚️ Level: " + level + " | 💪 Strength: " + strength);
+        System.out.println("💰 Gold: " + gold + " | 🛡 Armor: " + armor);
+        System.out.println("=====================\n");
     }
 }
