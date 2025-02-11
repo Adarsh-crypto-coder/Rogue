@@ -26,3 +26,4 @@ GitHub    : Upload and manage code on GitHub.
 |---|-----------------------|---------------------------------|-------------|-------------------------------------------------------|
 | 1 | IDE                   | Members use IDE of their choice | -           | It is not necessary for everyone to use the same IDE. |
 | 2 | Dependency Management | Maven                           | -           | Group preferred Maven                                 |
+| 2 | Game Screen Output    | JFrame                          | -           | For output game screen                                |
