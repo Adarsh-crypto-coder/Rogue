@@ -1,5 +1,7 @@
 package com.example;
 
+import java.util.Random;
+
 public class Player {
     private int x, y;
     private int hp;
@@ -10,6 +12,7 @@ public class Player {
     private int armor;
     private char[][] map;
     private String statusMessage;
+    private Random rand = new Random(); // Add Random for attack calculations
 
     public Player(int[] startPosition, char[][] map) {
         this.x = startPosition[0];
@@ -28,14 +31,14 @@ public class Player {
     public int getY() { return y; }
     public int getHp() { return hp; }
     public double getHunger() { return hunger; }
-    public int getLevel() { return level; } // ✅ Now updates correctly!
+    public int getLevel() { return level; }
     public int getStrength() { return strength; }
     public int getGold() { return gold; }
     public int getArmor() { return armor; }
     public String getStatusMessage() { return statusMessage; }
 
     public void move(char direction) {
-        if (hp <= 0) { // ✅ Prevent movement when dead
+        if (hp <= 0) { 
             statusMessage = "You are dead! Cannot move.";
             return;
         }
@@ -51,7 +54,7 @@ public class Player {
             default: return;
         }
 
-        // ✅ Prevent out-of-bounds movement
+        
         if (newX < 0 || newY < 0 || newY >= map.length || newX >= map[0].length) {
             statusMessage = "You cannot move outside the dungeon!";
             return;
@@ -59,30 +62,30 @@ public class Player {
 
         char tile = map[newY][newX];
 
-        // ✅ If first move, replace 'P' with a floor tile
+       
         if (map[y][x] == 'P') {
-            map[y][x] = '.'; // Convert starting position into floor
+            map[y][x] = '.'; 
         }
 
-        // ✅ Prevent movement into walls
+        
         if (tile != '#') { 
             x = newX;
             y = newY;
-            decreaseHunger(); // ✅ Reduce hunger when moving
+            decreaseHunger();
         }
 
-        // ✅ Handle Stairs (`>` for down, `<` for up)
+        
         if (tile == '>') {
             statusMessage = "Going down to the next floor!";
-            level++; // ✅ Increase level number when moving down
+            level++; 
             System.out.println("🔽 Moving to Level " + level + "...");
-            loadNewDungeon("levels/level" + level + ".txt"); // ✅ Dynamic level loading
+            loadNewDungeon("levels/level" + level + ".txt");
         } else if (tile == '<') {
             if (level > 1) {
                 statusMessage = "Going up to the previous floor!";
-                level--; // ✅ Decrease level number when moving up
+                level--; 
                 System.out.println("🔼 Moving to Level " + level + "...");
-                loadNewDungeon("levels/level" + level + ".txt"); // ✅ Dynamic level loading
+                loadNewDungeon("levels/level" + level + ".txt"); 
             } else {
                 statusMessage = "You are already at the top floor!";
             }
@@ -98,19 +101,59 @@ public class Player {
         }
     }
 
-    // ✅ Handles damage and death
-    private void takeDamage(int amount) {
-        hp -= amount;
+    /**
+     * Modified takeDamage method for Player that accounts for armor
+     */
+    public void takeDamage(int amount) {
+        
+        int reducedDamage = Math.max(1, amount - (armor / 2));
+        hp -= reducedDamage;
+        
         if (hp <= 0) {
             hp = 0;
             statusMessage = "You have died!";
+        } else {
+            statusMessage = "You took " + reducedDamage + " damage!";
+        }
+    }
+
+    /**
+     * Method for attacking monsters
+     */
+    public void attackMonster(Monster monster) {
+        if (monster == null || !monster.isAlive()) {
+            statusMessage = "There is no monster there!";
+            return;
+        }
+        
+       
+        int damage = strength + rand.nextInt(3);
+        
+        
+        monster.takeDamage(damage);
+        statusMessage = "You attack " + monster.getName() + " for " + damage + " damage!";
+        
+        
+        if (!monster.isAlive()) {
+            
+            int expGained = monster.getExpValue();
+            int goldGained = monster.getExpValue() / 3;
+            
+            this.gold += goldGained;
+            statusMessage = "You defeated " + monster.getName() + "! Gained " + goldGained + " gold.";
+            
+            
+            if (rand.nextDouble() < 0.25) {
+                statusMessage += " You found an item!";
+                
+            }
         }
     }
 
     private void loadNewDungeon(String levelFile) {
         System.out.println("🔄 Loading new dungeon from: " + levelFile);
     
-        Dungeon newDungeon = new Dungeon(levelFile); // ✅ Create a new dungeon instance
+        Dungeon newDungeon = new Dungeon(levelFile); 
     
         if (newDungeon.getMap() == null || newDungeon.getMap().length == 0) {
             System.out.println("❌ Error: Failed to load new dungeon!");
@@ -118,15 +161,15 @@ public class Player {
             return;
         }
     
-        // ✅ Update player's level from the dungeon
-        this.level = newDungeon.getLevelNumber(); // ✅ Get correct level from the txt file
+        
+        this.level = newDungeon.getLevelNumber();
     
-        // ✅ Clear old position before switching levels
+        
         if (map[y][x] == '@') {
-            map[y][x] = '.'; // Remove player icon from old map
+            map[y][x] = '.';
         }
     
-        // ✅ Overwrite old dungeon completely
+        
         this.map = newDungeon.getMap();
         int[] startPos = newDungeon.getPlayerStartPosition();
         this.x = startPos[0];
@@ -135,8 +178,6 @@ public class Player {
         System.out.println("✅ Successfully loaded new dungeon: " + levelFile);
         statusMessage = "You have entered Level " + level + "!";
     }
-    
-    
 
     public void addGold(int amount) {
         gold += amount;

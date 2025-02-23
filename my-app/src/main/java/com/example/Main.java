@@ -79,29 +79,19 @@ public class Main extends JFrame {
     }
 
     private void updateMapDisplay() {
-        if (document == null) {
-            System.out.println("❌ Error: `document` is null, skipping updateMapDisplay()");
-            return;
-        }
-    
         try {
             document.remove(0, document.getLength());
-            char[][] map = dungeon.getMap();
-    
-            if (map == null || map.length == 0 || map[0].length == 0) {
-                System.out.println("❌ Error: Dungeon map is empty!");
-                document.insertString(0, "Error: Dungeon map is empty!", null);
-                return;
-            }
-    
+            // Use getMapWithMonsters to get a map copy with monsters overlaid
+            char[][] displayMap = dungeon.getMapWithMonsters();
+            
             int playerX = player.getX();
             int playerY = player.getY();
     
-            for (int y = 0; y < map.length; y++) {
-                for (int x = 0; x < map[0].length; x++) {
-                    char tile = (x == playerX && y == playerY) ? '@' : map[y][x];
+            for (int y = 0; y < displayMap.length; y++) {
+                for (int x = 0; x < displayMap[0].length; x++) {
+                    // Render the player with '@' if on the same tile
+                    char tile = (x == playerX && y == playerY) ? '@' : displayMap[y][x];
                     Style style = styleContext.addStyle("Style", null);
-    
                     switch (tile) {
                         case '#': StyleConstants.setForeground(style, Color.YELLOW); break;
                         case '.': StyleConstants.setForeground(style, Color.LIGHT_GRAY); break;
@@ -109,24 +99,20 @@ public class Main extends JFrame {
                         case '<': StyleConstants.setForeground(style, Color.MAGENTA); break;
                         default: StyleConstants.setForeground(style, Color.WHITE); break;
                     }
-    
                     document.insertString(document.getLength(), String.valueOf(tile), style);
                 }
                 document.insertString(document.getLength(), "\n", null);
             }
     
-            // ✅ Show the correct level number from the text file
-            int currentLevel = dungeon.getLevelNumber(); 
-    
-            // Display full player stats with level
+            int currentLevel = dungeon.getLevelNumber();
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
             document.insertString(document.getLength(), "\nLEVEL: " + currentLevel + 
-                                " | HP: " + player.getHp() + 
-                                " | Hunger: " + String.format("%.2f", player.getHunger()) + 
-                                " | Strength: " + player.getStrength() +
-                                " | Gold: " + player.getGold() +
-                                " | Armor: " + player.getArmor(), statusStyle);
+                                    " | HP: " + player.getHp() + 
+                                    " | Hunger: " + String.format("%.2f", player.getHunger()) + 
+                                    " | Strength: " + player.getStrength() +
+                                    " | Gold: " + player.getGold() +
+                                    " | Armor: " + player.getArmor(), statusStyle);
             document.insertString(document.getLength(), "\n" + player.getStatusMessage(), statusStyle);
     
         } catch (BadLocationException e) {
@@ -134,12 +120,13 @@ public class Main extends JFrame {
         }
     }
     
-
+    
     // ✅ Use KeyBindings instead of KeyListener
     private void setupKeyBindings() {
         InputMap inputMap = textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = textPane.getActionMap();
 
+        // Movement key bindings
         inputMap.put(KeyStroke.getKeyStroke("W"), "moveUp");
         inputMap.put(KeyStroke.getKeyStroke("A"), "moveLeft");
         inputMap.put(KeyStroke.getKeyStroke("S"), "moveDown");
@@ -149,7 +136,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('W');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -157,7 +144,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('A');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -165,7 +152,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('S');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -173,45 +160,72 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('D');
-                checkForLevelChange();
+                processTurn();
+            }
+        });
+        
+        // Attack key binding (F key)
+        inputMap.put(KeyStroke.getKeyStroke("F"), "attack");
+        actionMap.put("attack", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Monster monster = dungeon.getMonsterAt(player.getX(), player.getY());
+                if (monster != null) {
+                    player.attackMonster(monster);
+                } else {
+                    // Update status message if no monster is present
+                    // (Assumes Player class has a way to update statusMessage, e.g., via attackMonster or another method.)
+                    System.out.println("No monster here to attack!");
+                }
+                processTurn();
             }
         });
     }
+    
+    // ✅ Process a full turn: update monsters, check for level change, and update display
+    private void processTurn() {
+        // Let monsters take their turn
+        dungeon.updateMonsters(player);
+        
+        // Check if player stepped on stairs or died
+        checkForLevelChange();
+    }
 
-    // ✅ Check if player needs to switch levels
+    // ✅ Check if player needs to switch levels or if game is over
     private void checkForLevelChange() {
         int[] stairsUp = dungeon.getStairsUp();
         int[] stairsDown = dungeon.getStairsDown();
-    
+
         if (stairsDown != null && player.getX() == stairsDown[0] && player.getY() == stairsDown[1]) {
             if (currentLevelFile.equals("levels/level1.txt")) {
                 System.out.println("🔽 Moving to Level 2...");
                 loadDungeon("levels/level2.txt");
+                return;
             } else if (currentLevelFile.equals("levels/level2.txt")) {
                 System.out.println("🔽 Moving to Level 3...");
                 loadDungeon("levels/level3.txt");
+                return;
             }
-        } 
-        else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
+        } else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
             if (currentLevelFile.equals("levels/level3.txt")) {
                 System.out.println("🔼 Moving to Level 2...");
                 loadDungeon("levels/level2.txt");
+                return;
             } else if (currentLevelFile.equals("levels/level2.txt")) {
                 System.out.println("🔼 Moving to Level 1...");
                 loadDungeon("levels/level1.txt");
+                return;
             }
-        } 
-        else if (player.getHp() <= 0) {
+        } else if (player.getHp() <= 0) {
             System.out.println("💀 Game Over! You died.");
             JOptionPane.showMessageDialog(this, "Game Over! You died.", "Game Over", JOptionPane.INFORMATION_MESSAGE);
             System.exit(0);
-        } 
-        else {
-            updateMapDisplay();
         }
+        
+        updateMapDisplay();
     }
 
     public static void main(String[] args) {
-        new Main();
+        SwingUtilities.invokeLater(Main::new);
     }
 }
