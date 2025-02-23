@@ -117,8 +117,6 @@ public class Main extends JFrame {
     
             // ✅ Show the correct level number from the text file
             int currentLevel = dungeon.getLevelNumber(); 
-    
-            // Display full player stats with level
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
             document.insertString(document.getLength(), "\nLEVEL: " + currentLevel + 
@@ -134,12 +132,12 @@ public class Main extends JFrame {
         }
     }
     
-
     // ✅ Use KeyBindings instead of KeyListener
     private void setupKeyBindings() {
         InputMap inputMap = textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = textPane.getActionMap();
 
+        // Movement key bindings
         inputMap.put(KeyStroke.getKeyStroke("W"), "moveUp");
         inputMap.put(KeyStroke.getKeyStroke("A"), "moveLeft");
         inputMap.put(KeyStroke.getKeyStroke("S"), "moveDown");
@@ -149,7 +147,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('W');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -157,7 +155,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('A');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -165,7 +163,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('S');
-                checkForLevelChange();
+                processTurn();
             }
         });
 
@@ -173,45 +171,72 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 player.move('D');
-                checkForLevelChange();
+                processTurn();
+            }
+        });
+        
+        // Attack key binding (F key)
+        inputMap.put(KeyStroke.getKeyStroke("F"), "attack");
+        actionMap.put("attack", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Monster monster = dungeon.getMonsterAt(player.getX(), player.getY());
+                if (monster != null) {
+                    player.attackMonster(monster);
+                } else {
+                    // Update status message if no monster is present
+                    // (Assumes Player class has a way to update statusMessage, e.g., via attackMonster or another method.)
+                    System.out.println("No monster here to attack!");
+                }
+                processTurn();
             }
         });
     }
+    
+    // ✅ Process a full turn: update monsters, check for level change, and update display
+    private void processTurn() {
+        // Let monsters take their turn
+        dungeon.updateMonsters(player);
+        
+        // Check if player stepped on stairs or died
+        checkForLevelChange();
+    }
 
-    // ✅ Check if player needs to switch levels
+    // ✅ Check if player needs to switch levels or if game is over
     private void checkForLevelChange() {
         int[] stairsUp = dungeon.getStairsUp();
         int[] stairsDown = dungeon.getStairsDown();
-    
+
         if (stairsDown != null && player.getX() == stairsDown[0] && player.getY() == stairsDown[1]) {
             if (currentLevelFile.equals("levels/level1.txt")) {
                 System.out.println("🔽 Moving to Level 2...");
                 loadDungeon("levels/level2.txt");
+                return;
             } else if (currentLevelFile.equals("levels/level2.txt")) {
                 System.out.println("🔽 Moving to Level 3...");
                 loadDungeon("levels/level3.txt");
+                return;
             }
-        } 
-        else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
+        } else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
             if (currentLevelFile.equals("levels/level3.txt")) {
                 System.out.println("🔼 Moving to Level 2...");
                 loadDungeon("levels/level2.txt");
+                return;
             } else if (currentLevelFile.equals("levels/level2.txt")) {
                 System.out.println("🔼 Moving to Level 1...");
                 loadDungeon("levels/level1.txt");
+                return;
             }
-        } 
-        else if (player.getHp() <= 0) {
+        } else if (player.getHp() <= 0) {
             System.out.println("💀 Game Over! You died.");
             JOptionPane.showMessageDialog(this, "Game Over! You died.", "Game Over", JOptionPane.INFORMATION_MESSAGE);
             System.exit(0);
-        } 
-        else {
-            updateMapDisplay();
         }
+        
+        updateMapDisplay();
     }
 
     public static void main(String[] args) {
-        new Main();
+        SwingUtilities.invokeLater(Main::new);
     }
 }

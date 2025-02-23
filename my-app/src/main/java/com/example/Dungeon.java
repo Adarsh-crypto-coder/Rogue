@@ -5,15 +5,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Dungeon {
     private char[][] map;
     private int width, height;
-    private int levelNumber; // ✅ Store level number
+    private int levelNumber;
     private int[] stairsUp;
     private int[] stairsDown;
+    private MonsterManager monsterManager;
+    private Random random = new Random();
 
     public Dungeon(String levelFile) {
+        monsterManager = new MonsterManager();
         loadLevel(levelFile);
     }
 
@@ -23,7 +27,7 @@ public class Dungeon {
         try (BufferedReader br = new BufferedReader(new FileReader(levelFile))) {
             String line = br.readLine();
             
-            // ✅ Read first line as level number
+            // Read first line as level number
             if (line != null && line.startsWith("LEVEL ")) {
                 levelNumber = Integer.parseInt(line.replace("LEVEL ", "").trim());
             } else {
@@ -31,7 +35,7 @@ public class Dungeon {
                 return;
             }
 
-            // ✅ Read rest of the map
+            // Read rest of the map
             while ((line = br.readLine()) != null) {
                 if (!line.trim().isEmpty()) {
                     lines.add(line);
@@ -50,7 +54,7 @@ public class Dungeon {
         width = lines.get(0).length();
         height = lines.size();
 
-        // ✅ Completely replace old map with new level
+        // Completely replace old map with new level
         map = new char[height][width];
 
         System.out.println("✅ Loading Level " + levelNumber + " from: " + levelFile);
@@ -59,7 +63,14 @@ public class Dungeon {
         }
 
         findStairs();
-        System.out.println("✅ Level " + levelNumber + " Loaded Successfully: " + levelFile);
+        
+        // Populate the dungeon with monsters - more monsters on deeper levels
+        int baseMonsterCount = 5 + (levelNumber * 2);
+        int monsterCount = baseMonsterCount + random.nextInt(3);
+        monsterManager.populateDungeon(this, monsterCount);
+        
+        System.out.println("✅ Level " + levelNumber + " Loaded Successfully with " + 
+                          monsterManager.getAllMonsters().size() + " monsters");
     }
 
     private void findStairs() {
@@ -86,9 +97,22 @@ public class Dungeon {
     public char[][] getMap() {
         return map;
     }
+    
+    public char[][] getMapWithMonsters() {
+        // Create a copy of the map so we don't modify the original
+        char[][] mapCopy = new char[height][width];
+        for (int y = 0; y < height; y++) {
+            System.arraycopy(map[y], 0, mapCopy[y], 0, width);
+        }
+        
+        // Render monsters on the map copy
+        monsterManager.renderMonstersOnMap(mapCopy);
+        
+        return mapCopy;
+    }
 
     public int getLevelNumber() {
-        return levelNumber; // ✅ Now we can get the correct level number
+        return levelNumber;
     }
 
     public int[] getStairsUp() {
@@ -97,6 +121,10 @@ public class Dungeon {
 
     public int[] getStairsDown() {
         return stairsDown;
+    }
+    
+    public MonsterManager getMonsterManager() {
+        return monsterManager;
     }
 
     public int[] getPlayerStartPosition() {
@@ -119,5 +147,15 @@ public class Dungeon {
         }
 
         return new int[]{1, 1}; 
+    }
+    
+    // Process monster turns after player moves
+    public void updateMonsters(Player player) {
+        monsterManager.updateMonsters(player, map);
+    }
+    
+    // Check if a monster is at coordinates
+    public Monster getMonsterAt(int x, int y) {
+        return monsterManager.getMonsterAt(x, y);
     }
 }
