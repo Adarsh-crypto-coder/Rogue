@@ -26,7 +26,6 @@ public class MonsterManager {
         char[][] map = dungeon.getMap();
         int level = dungeon.getLevelNumber();
         
-        
         monsters.clear();
         
        
@@ -39,9 +38,7 @@ public class MonsterManager {
             }
         }
         
-       
         Collections.shuffle(validPositions);
-        
         
         monsterCount = Math.min(monsterCount, validPositions.size());
         
@@ -55,7 +52,8 @@ public class MonsterManager {
         }
         
         // Maybe add a boss on higher levels (level 2+)
-        if (level >= 2 && !validPositions.isEmpty() && rand.nextDouble() < 0.3) {
+        // Downgraded for demonstration purposes. 0.3 -> 0.1
+        if (level >= 2 && !validPositions.isEmpty() && rand.nextDouble() < 0.1) {
             int[] pos = validPositions.remove(0);
             String[] bossNames = {
                 "Grimclaw the Destroyer", 
@@ -82,54 +80,52 @@ public class MonsterManager {
         Iterator<Monster> iterator = monsters.iterator();
         while (iterator.hasNext()) {
             Monster monster = iterator.next();
-            
-            
+    
             if (!monster.isAlive()) {
                 iterator.remove();
                 continue;
             }
-            
-            
+    
             monster.updateStatus();
-            
-            
+    
             if (monster.getStatusEffect().equals("stunned")) {
                 continue;
             }
-            
-            
+    
             int monsterX = monster.getX();
             int monsterY = monster.getY();
             int playerX = player.getX();
             int playerY = player.getY();
-            
+    
             boolean canAttack = Math.abs(monsterX - playerX) <= 1 && 
                                Math.abs(monsterY - playerY) <= 1;
-            
+    
             if (canAttack && monster.isHostile()) {
-                
                 int damage = monster.calculateAttackDamage();
                 player.takeDamage(damage);
                 System.out.println(monster.getName() + " attacks you for " + damage + " damage!");
             } else if (monster.isHostile()) {
-                
-                monster.moveTowards(playerX, playerY, map);
-            } else {
-                
-                int direction = rand.nextInt(4);
-                int newX = monsterX;
-                int newY = monsterY;
-                
-                switch (direction) {
-                    case 0: newY--; break; // Up
-                    case 1: newX++; break; // Right
-                    case 2: newY++; break; // Down
-                    case 3: newX--; break; // Left
-                }
-                
+                // Move towards player only if the path is clear
+                int dx = Integer.compare(playerX, monsterX);
+                int dy = Integer.compare(playerY, monsterY);
+    
+                int newX = monsterX + dx;
+                int newY = monsterY + dy;
+    
                 if (newX >= 0 && newY >= 0 && newY < map.length && newX < map[0].length && map[newY][newX] == '.') {
-                    monster.setX(newX);
-                    monster.setY(newY);
+                    // Check if the new position is not occupied by another monster
+                    boolean positionOccupied = false;
+                    for (Monster otherMonster : monsters) {
+                        if (otherMonster.getX() == newX && otherMonster.getY() == newY && otherMonster.isAlive()) {
+                            positionOccupied = true;
+                            break;
+                        }
+                    }
+    
+                    if (!positionOccupied) {
+                        monster.setX(newX);
+                        monster.setY(newY);
+                    }
                 }
             }
         }

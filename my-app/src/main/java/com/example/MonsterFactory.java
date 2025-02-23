@@ -52,17 +52,26 @@ public class MonsterFactory {
         char symbol = SYMBOLS_BY_TYPE[typeIndex];
         
        
-        int baseHp = 5 + (2 * dungeonLevel);
-        int hp = baseHp + rand.nextInt(dungeonLevel * 3);
-        
-        int baseAttack = 2 + dungeonLevel;
-        int attack = baseAttack + rand.nextInt(2);
-        
+        // int baseHp = 5 + (2 * dungeonLevel);
+        // int hp = baseHp + rand.nextInt(dungeonLevel * 3);
+        // int baseAttack = 2 + dungeonLevel;
+        // int attack = baseAttack + rand.nextInt(2);
+        // int baseDefense = dungeonLevel / 2;
+        // int defense = baseDefense + rand.nextInt(2);
+        // int expValue = 5 * dungeonLevel + rand.nextInt(5 * dungeonLevel);
+        // return new Monster(name, type, x, y, hp, attack, defense, expValue, symbol, true);
+        /*
+         * I've nerfed the monster's specs because the difficulty was too hard.
+         * @Author Suhwan Kim
+         * Feb 22
+         */
+        int baseHp = 3 + (dungeonLevel);
+        int hp = baseHp + rand.nextInt(dungeonLevel);
+        int baseAttack = 1 + dungeonLevel;
+        int attack = baseAttack + rand.nextInt(1);
         int baseDefense = dungeonLevel / 2;
-        int defense = baseDefense + rand.nextInt(2);
-        
+        int defense = baseDefense + rand.nextInt(1);
         int expValue = 5 * dungeonLevel + rand.nextInt(5 * dungeonLevel);
-        
         return new Monster(name, type, x, y, hp, attack, defense, expValue, symbol, true);
     }
     
@@ -181,4 +190,3 @@ public class MonsterFactory {
         return boss;
     }
 }
-

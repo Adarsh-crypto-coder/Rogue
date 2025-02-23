@@ -72,7 +72,19 @@ public class Main extends JFrame {
         }
 
         int[] playerStart = dungeon.getPlayerStartPosition();
-        player = new Player(playerStart, dungeon.getMap());
+        // Objectizing Player Movement. bu Suhwan Kim. Feb 22
+        // player.setX(playerStart[0]);
+        // player.setY(playerStart[1]);
+        // player.setMap(dungeon.getMap());
+        if (player == null) {
+            player = new Player(playerStart, dungeon.getMap(), dungeon);
+        } else {
+            player.setX(playerStart[0]);
+            player.setY(playerStart[1]);
+            player.setMap(dungeon.getMap());
+            player.setDungeon(dungeon);
+        }
+    
 
         System.out.println("✅ Dungeon Loaded: " + levelFile);
         updateMapDisplay();
@@ -104,15 +116,17 @@ public class Main extends JFrame {
                 document.insertString(document.getLength(), "\n", null);
             }
     
-            int currentLevel = dungeon.getLevelNumber();
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
-            document.insertString(document.getLength(), "\nLEVEL: " + currentLevel + 
-                                    " | HP: " + player.getHp() + 
-                                    " | Hunger: " + String.format("%.2f", player.getHunger()) + 
-                                    " | Strength: " + player.getStrength() +
-                                    " | Gold: " + player.getGold() +
-                                    " | Armor: " + player.getArmor(), statusStyle);
+            document.insertString(document.getLength(), 
+                                "\nFLOOR: " + player.getFloor() + 
+                                " | LEVEL: " + player.getLevel() + 
+                                " | HP: " + player.getHp() + "/" + player.getMaxHp() + 
+                                " | Hunger: " + String.format("%.2f", player.getHunger()) + 
+                                " | Strength: " + player.getStrength() + 
+                                " | Gold: " + player.getGold() + 
+                                " | Armor: " + player.getArmor() + 
+                                " | XP: " + player.getXp() + "/" + player.getXpToNextLevel(), statusStyle);
             document.insertString(document.getLength(), "\n" + player.getStatusMessage(), statusStyle);
     
         } catch (BadLocationException e) {
