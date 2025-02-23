@@ -79,29 +79,19 @@ public class Main extends JFrame {
     }
 
     private void updateMapDisplay() {
-        if (document == null) {
-            System.out.println("❌ Error: `document` is null, skipping updateMapDisplay()");
-            return;
-        }
-    
         try {
             document.remove(0, document.getLength());
-            char[][] map = dungeon.getMap();
-    
-            if (map == null || map.length == 0 || map[0].length == 0) {
-                System.out.println("❌ Error: Dungeon map is empty!");
-                document.insertString(0, "Error: Dungeon map is empty!", null);
-                return;
-            }
-    
+            // Use getMapWithMonsters to get a map copy with monsters overlaid
+            char[][] displayMap = dungeon.getMapWithMonsters();
+            
             int playerX = player.getX();
             int playerY = player.getY();
     
-            for (int y = 0; y < map.length; y++) {
-                for (int x = 0; x < map[0].length; x++) {
-                    char tile = (x == playerX && y == playerY) ? '@' : map[y][x];
+            for (int y = 0; y < displayMap.length; y++) {
+                for (int x = 0; x < displayMap[0].length; x++) {
+                    // Render the player with '@' if on the same tile
+                    char tile = (x == playerX && y == playerY) ? '@' : displayMap[y][x];
                     Style style = styleContext.addStyle("Style", null);
-    
                     switch (tile) {
                         case '#': StyleConstants.setForeground(style, Color.YELLOW); break;
                         case '.': StyleConstants.setForeground(style, Color.LIGHT_GRAY); break;
@@ -109,28 +99,27 @@ public class Main extends JFrame {
                         case '<': StyleConstants.setForeground(style, Color.MAGENTA); break;
                         default: StyleConstants.setForeground(style, Color.WHITE); break;
                     }
-    
                     document.insertString(document.getLength(), String.valueOf(tile), style);
                 }
                 document.insertString(document.getLength(), "\n", null);
             }
     
-            // ✅ Show the correct level number from the text file
-            int currentLevel = dungeon.getLevelNumber(); 
+            int currentLevel = dungeon.getLevelNumber();
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
             document.insertString(document.getLength(), "\nLEVEL: " + currentLevel + 
-                                " | HP: " + player.getHp() + 
-                                " | Hunger: " + String.format("%.2f", player.getHunger()) + 
-                                " | Strength: " + player.getStrength() +
-                                " | Gold: " + player.getGold() +
-                                " | Armor: " + player.getArmor(), statusStyle);
+                                    " | HP: " + player.getHp() + 
+                                    " | Hunger: " + String.format("%.2f", player.getHunger()) + 
+                                    " | Strength: " + player.getStrength() +
+                                    " | Gold: " + player.getGold() +
+                                    " | Armor: " + player.getArmor(), statusStyle);
             document.insertString(document.getLength(), "\n" + player.getStatusMessage(), statusStyle);
     
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
     }
+    
     
     // ✅ Use KeyBindings instead of KeyListener
     private void setupKeyBindings() {
