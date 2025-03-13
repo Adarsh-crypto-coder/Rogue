@@ -208,7 +208,7 @@ public class Main extends JFrame {
         int[] stairsDown = dungeon.getStairsDown();
     
         if (stairsDown != null && player.getX() == stairsDown[0] && player.getY() == stairsDown[1]) {
-            if (dungeon.getLevelNumber() < 8) {  // 마지막 레벨인 8에서는 더 이상 내려갈 수 없음
+            if (dungeon.getLevelNumber() < 8) {
                 System.out.println("🔽 Moving to Level " + (dungeon.getLevelNumber() + 1) + "...");
                 loadDungeon("levels/level" + (dungeon.getLevelNumber() + 1) + ".txt");
             } else {
