@@ -73,9 +73,6 @@ public class Main extends JFrame {
 
         int[] playerStart = dungeon.getPlayerStartPosition();
         // Objectizing Player Movement. bu Suhwan Kim. Feb 22
-        // player.setX(playerStart[0]);
-        // player.setY(playerStart[1]);
-        // player.setMap(dungeon.getMap());
         if (player == null) {
             player = new Player(playerStart, dungeon.getMap(), dungeon);
         } else {
@@ -85,7 +82,7 @@ public class Main extends JFrame {
             player.setDungeon(dungeon);
         }
     
-
+        player.setFloor(dungeon.getLevelNumber());
         System.out.println("✅ Dungeon Loaded: " + levelFile);
         updateMapDisplay();
     }
@@ -209,26 +206,22 @@ public class Main extends JFrame {
     private void checkForLevelChange() {
         int[] stairsUp = dungeon.getStairsUp();
         int[] stairsDown = dungeon.getStairsDown();
-
+    
         if (stairsDown != null && player.getX() == stairsDown[0] && player.getY() == stairsDown[1]) {
-            if (currentLevelFile.equals("levels/level1.txt")) {
-                System.out.println("🔽 Moving to Level 2...");
-                loadDungeon("levels/level2.txt");
-                return;
-            } else if (currentLevelFile.equals("levels/level2.txt")) {
-                System.out.println("🔽 Moving to Level 3...");
-                loadDungeon("levels/level3.txt");
-                return;
+            if (dungeon.getLevelNumber() < 8) {
+                System.out.println("🔽 Moving to Level " + (dungeon.getLevelNumber() + 1) + "...");
+                loadDungeon("levels/level" + (dungeon.getLevelNumber() + 1) + ".txt");
+            } else {
+                System.out.println("You're at the bottom of the dungeon!");
+                player.setStatusMessage("You're at the bottom of the dungeon!");  // Player 클래스의 setStatusMessage 메서드 사용
             }
         } else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
-            if (currentLevelFile.equals("levels/level3.txt")) {
-                System.out.println("🔼 Moving to Level 2...");
-                loadDungeon("levels/level2.txt");
-                return;
-            } else if (currentLevelFile.equals("levels/level2.txt")) {
-                System.out.println("🔼 Moving to Level 1...");
-                loadDungeon("levels/level1.txt");
-                return;
+            if (dungeon.getLevelNumber() > 1) {
+                System.out.println("🔼 Moving to Level " + (dungeon.getLevelNumber() - 1) + "...");
+                loadDungeon("levels/level" + (dungeon.getLevelNumber() - 1) + ".txt");
+            } else {
+                System.out.println("You are already at the top floor!");
+                player.setStatusMessage("You are already at the top floor!");  // Player 클래스의 setStatusMessage 메서드 사용
             }
         } else if (player.getHp() <= 0) {
             System.out.println("💀 Game Over! You died.");

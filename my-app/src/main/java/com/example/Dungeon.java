@@ -64,9 +64,6 @@ public class Dungeon {
 
         findStairs();
         
-        // Populate the dungeon with monsters - more monsters on deeper levels
-        // int baseMonsterCount = 5 + (levelNumber * 2);
-        // int monsterCount = baseMonsterCount + random.nextInt(3); 
         /*
          * I've nerfed the monster's count because the difficulty was too hard.
          * @Author Suhwan Kim
