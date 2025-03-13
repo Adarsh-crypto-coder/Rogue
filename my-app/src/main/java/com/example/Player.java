@@ -190,15 +190,12 @@ public class Player {
             return;
         }
     
-        
-        this.level = newDungeon.getLevelNumber();
+        this.floor = newDungeon.getLevelNumber();
     
-        
         if (map[y][x] == '@') {
             map[y][x] = '.';
         }
     
-        
         this.map = newDungeon.getMap();
         int[] startPos = newDungeon.getPlayerStartPosition();
         this.x = startPos[0];
