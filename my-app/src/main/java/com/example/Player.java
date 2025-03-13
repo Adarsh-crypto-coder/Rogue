@@ -263,4 +263,16 @@ public class Player {
     public void setDungeon(Dungeon dungeon) {
         this.dungeon = dungeon;
     }
+
+    public void setStatusMessage(String statusMessage) {
+        this.statusMessage = statusMessage;
+    }
+
+    public void setFloor(int floor) {
+        this.floor = floor; 
+    }
+
+    public void setLevel(int level) {
+        this.level = level; 
+    }
 }
