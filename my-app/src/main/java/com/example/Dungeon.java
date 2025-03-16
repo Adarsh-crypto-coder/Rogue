@@ -1,6 +1,7 @@
 package com.example;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ public class Dungeon {
     private int[] stairsDown;
     private MonsterManager monsterManager;
     private Random random = new Random();
+    private boolean isLastLevel = false;
 
     public Dungeon(String levelFile) {
         monsterManager = new MonsterManager();
@@ -64,17 +66,23 @@ public class Dungeon {
 
         findStairs();
         
-        /*
-         * I've nerfed the monster's count because the difficulty was too hard.
-         * @Author Suhwan Kim
-         * Feb 22
-         */
+        // Populate the dungeon with monsters - more monsters on deeper levels
         int baseMonsterCount = 1 + (levelNumber * 1);
-        int monsterCount = baseMonsterCount + random.nextInt(1);
+        int monsterCount = baseMonsterCount + random.nextInt(3);
         monsterManager.populateDungeon(this, monsterCount);
         
         System.out.println("✅ Level " + levelNumber + " Loaded Successfully with " + 
                           monsterManager.getAllMonsters().size() + " monsters");
+
+        File levelsDir = new File("levels");
+        File[] levelFiles = levelsDir.listFiles((dir, name) -> name.startsWith("level") && name.endsWith(".txt"));
+        if (levelFiles != null && levelNumber == levelFiles.length) {
+            isLastLevel = true;
+        }
+    }
+
+    public boolean isLastLevel() {
+        return isLastLevel;
     }
 
     private void findStairs() {
