@@ -60,7 +60,16 @@ public class Player {
     public String getStatusMessage() { return statusMessage; }
 
     // Setters
-    public void setStatusMessage(String message) { this.statusMessage = message;}
+    public void setStatusMessage(String message) { 
+        this.statusMessage = message;
+    }
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+    public void setMap(char[][] map) {
+        this.map = map;
+    }
     
     // Inventory getters
     public List<Item> getInventory() { return inventory; }
