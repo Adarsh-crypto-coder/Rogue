@@ -15,6 +15,8 @@ public class Player {
     private int baseStrength;
     private int gold;
     private int armor;
+    private int exp;
+    private int expToNextLevel;
     private char[][] map;
     private String statusMessage;
     private Random rand = new Random();
@@ -31,13 +33,15 @@ public class Player {
         this.map = map;
         this.maxHp = 1000;
         this.hp = maxHp;        
-        this.maxHunger = 1000.0; 
+        this.maxHunger = 100.0; 
         this.hunger = maxHunger;
         this.level = 1;        
-        this.baseStrength = 5;
+        this.baseStrength = 3;
         this.strength = baseStrength;
         this.gold = 0;         
         this.armor = 0;        
+        this.exp = 0;
+        this.expToNextLevel = 10;
         this.statusMessage = "Welcome to the dungeon!";
         this.inventory = new ArrayList<>();
         
@@ -57,6 +61,8 @@ public class Player {
     public int getBaseStrength() { return baseStrength; }
     public int getGold() { return gold; }
     public int getArmor() { return armor; }
+    public int getExp() { return exp; }
+    public int getExpToNextLevel() { return expToNextLevel; }
     public String getStatusMessage() { return statusMessage; }
 
     // Setters
@@ -194,7 +200,8 @@ public class Player {
             int goldGained = monster.getExpValue() / 3;
             
             this.gold += goldGained;
-            statusMessage = "You defeated " + monster.getName() + "! Gained " + goldGained + " gold.";
+            this.addExp(expGained);
+            statusMessage = "You defeated " + monster.getName() + "! Gained " + goldGained + " gold." + expGained + " experience.";
             
             // Chance to drop an item when monster is defeated
             if (rand.nextDouble() < 0.35) {
@@ -459,6 +466,19 @@ public class Player {
     }
 
     /**
+     * Add experience points and check for level up
+     */
+    public void addExp(int amount) {
+        this.exp += amount;
+        statusMessage = "You gained " + amount + " experience points!";
+        
+        // Check if player has enough experience to level up
+        while (exp >= expToNextLevel) {
+            levelUp();
+        }
+    }
+
+    /**
      * Add gold to the player
      */
     public void addGold(int amount) {
@@ -507,5 +527,22 @@ public class Player {
         double oldHunger = hunger;
         hunger = Math.min(maxHunger, hunger + amount);
         statusMessage = "You restored " + String.format("%.1f", (hunger - oldHunger)) + " hunger!";
+    }
+
+    /**
+     * Level up the player
+     */
+    private void levelUp() {
+        level++;
+        exp -= expToNextLevel; // Deduct the exp used for leveling up
+        expToNextLevel = (int) (expToNextLevel * 1.5); // Increase the exp needed for next level
+        
+        // Increase player stats
+        maxHp += 20;
+        hp = maxHp; // Fully heal the player
+        baseStrength += 2;
+        strength = baseStrength; // Update strength
+        
+        statusMessage = "You leveled up to level " + level + "!";
     }
 }
