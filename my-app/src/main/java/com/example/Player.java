@@ -1,9 +1,3 @@
-package com.example;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 public class Player {
     private int x, y;
     private int hp;
@@ -29,9 +23,9 @@ public class Player {
         this.x = startPosition[0];
         this.y = startPosition[1];
         this.map = map;
-        this.maxHp = 10;
+        this.maxHp = 1000;
         this.hp = maxHp;        
-        this.maxHunger = 10.0; 
+        this.maxHunger = 1000.0; 
         this.hunger = maxHunger;
         this.level = 1;        
         this.baseStrength = 5;
@@ -58,6 +52,9 @@ public class Player {
     public int getGold() { return gold; }
     public int getArmor() { return armor; }
     public String getStatusMessage() { return statusMessage; }
+
+    // Setters
+    public void setStatusMessage(String message) { this.statusMessage = message;}
     
     // Inventory getters
     public List<Item> getInventory() { return inventory; }
@@ -432,12 +429,12 @@ public class Player {
         }
     
         this.level = newDungeon.getLevelNumber();
+        this.map = newDungeon.getMap();
     
         if (map[y][x] == '@') {
             map[y][x] = '.';
         }
     
-        this.map = newDungeon.getMap();
         int[] startPos = newDungeon.getPlayerStartPosition();
         this.x = startPos[0];
         this.y = startPos[1];
