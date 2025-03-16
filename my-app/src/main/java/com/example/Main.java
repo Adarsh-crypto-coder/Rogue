@@ -37,6 +37,7 @@ public class Main extends JFrame {
             System.exit(1);
         }
 
+        player = new Player(new int[]{1, 1}, new char[0][0]); 
         loadDungeon(currentLevelFile);
         
         // Create UI panel with buttons
@@ -138,7 +139,10 @@ public class Main extends JFrame {
         }
 
         int[] playerStart = dungeon.getPlayerStartPosition();
+        player.setPosition(playerStart[0], playerStart[1]);
+        player.setMap(dungeon.getMap());
         
+        /* 
         // Only create a new player object if one doesn't exist yet
         if (player == null) {
             player = new Player(playerStart, dungeon.getMap());
@@ -146,7 +150,7 @@ public class Main extends JFrame {
             // Update player's map and position when changing levels
             player.move('S'); // Trigger move to update the player's map reference
         }
-
+        */
         System.out.println("✅ Dungeon Loaded: " + levelFile);
         
         // Add some items to the dungeon for testing (in real game, these would be part of level files)
