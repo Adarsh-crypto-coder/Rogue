@@ -138,7 +138,6 @@ public class Main extends JFrame {
         }
 
         int[] playerStart = dungeon.getPlayerStartPosition();
-//<<<<<<< feature/item-packs-adarsh
         
         // Only create a new player object if one doesn't exist yet
         if (player == null) {
@@ -148,20 +147,6 @@ public class Main extends JFrame {
             player.move('S'); // Trigger move to update the player's map reference
         }
 
-        // Objectizing Player Movement. bu Suhwan Kim. Feb 22
-        /*
-        if (player == null) {
-            player = new Player(playerStart, dungeon.getMap(), dungeon);
-        } else {
-            player.setX(playerStart[0]);
-            player.setY(playerStart[1]);
-            player.setMap(dungeon.getMap());
-            player.setDungeon(dungeon);
-        }
-    
-        player.setFloor(dungeon.getLevelNumber());
-        */
-//>>>>>>> main
         System.out.println("✅ Dungeon Loaded: " + levelFile);
         
         // Add some items to the dungeon for testing (in real game, these would be part of level files)
@@ -249,9 +234,9 @@ public class Main extends JFrame {
                 document.insertString(document.getLength(), "\n", null);
             }
     
+            int currentLevel = dungeon.getLevelNumber();
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
-//<<<<<<< feature/item-packs-adarsh
             
             // Display legend
             document.insertString(document.getLength(), "\n=== MAP LEGEND ===\n", statusStyle);
@@ -291,20 +276,6 @@ public class Main extends JFrame {
             // Display controls
             document.insertString(document.getLength(), "\n=== CONTROLS ===\n", statusStyle);
             document.insertString(document.getLength(), "WASD = Movement | F = Attack | I = Inventory\n", statusStyle);
-//=======
-  /*
-            document.insertString(document.getLength(), 
-                                "\nFLOOR: " + player.getFloor() + 
-                                " | LEVEL: " + player.getLevel() + 
-                                " | HP: " + player.getHp() + "/" + player.getMaxHp() + 
-                                " | Hunger: " + String.format("%.2f", player.getHunger()) + 
-                                " | Strength: " + player.getStrength() + 
-                                " | Gold: " + player.getGold() + 
-                                " | Armor: " + player.getArmor() + 
-                                " | XP: " + player.getXp() + "/" + player.getXpToNextLevel(), statusStyle);
-            document.insertString(document.getLength(), "\n" + player.getStatusMessage(), statusStyle);
-            */
-//>>>>>>> main
     
         } catch (BadLocationException e) {
             e.printStackTrace();
@@ -389,22 +360,28 @@ public class Main extends JFrame {
     private void checkForLevelChange() {
         int[] stairsUp = dungeon.getStairsUp();
         int[] stairsDown = dungeon.getStairsDown();
-    
+
         if (stairsDown != null && player.getX() == stairsDown[0] && player.getY() == stairsDown[1]) {
-            if (dungeon.getLevelNumber() < 8) {
-                System.out.println("🔽 Moving to Level " + (dungeon.getLevelNumber() + 1) + "...");
-                loadDungeon("levels/level" + (dungeon.getLevelNumber() + 1) + ".txt");
-            } else {
-                System.out.println("You're at the bottom of the dungeon!");
-                player.setStatusMessage("You're at the bottom of the dungeon!");  // Player 클래스의 setStatusMessage 메서드 사용
+            int nextLevel = dungeon.getLevelNumber() + 1;
+            File nextLevelFile = new File("levels/level" + nextLevel + ".txt");
+            if (nextLevelFile.exists()) {
+                System.out.println("🔽 Moving to Level " + nextLevel + "...");
+                loadDungeon(nextLevelFile.getPath());
+                return;
+            } else if (dungeon.isLastLevel()) {
+                player.setStatusMessage("It's at the bottom of Dungeon.");
+                updateMapDisplay();
+                return;
             }
         } else if (stairsUp != null && player.getX() == stairsUp[0] && player.getY() == stairsUp[1]) {
-            if (dungeon.getLevelNumber() > 1) {
-                System.out.println("🔼 Moving to Level " + (dungeon.getLevelNumber() - 1) + "...");
-                loadDungeon("levels/level" + (dungeon.getLevelNumber() - 1) + ".txt");
-            } else {
-                System.out.println("You are already at the top floor!");
-                player.setStatusMessage("You are already at the top floor!");  // Player 클래스의 setStatusMessage 메서드 사용
+            int prevLevel = dungeon.getLevelNumber() - 1;
+            if (prevLevel >= 1) {
+                File prevLevelFile = new File("levels/level" + prevLevel + ".txt");
+                if (prevLevelFile.exists()) {
+                    System.out.println("🔼 Moving to Level " + prevLevel + "...");
+                    loadDungeon(prevLevelFile.getPath());
+                    return;
+                }
             }
         } else if (player.getHp() <= 0) {
             System.out.println("💀 Game Over! You died.");
