@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.text.*;
 import java.io.File;
+import java.util.Random;
 
 public class Main extends JFrame {
     private Dungeon dungeon;
@@ -12,22 +13,21 @@ public class Main extends JFrame {
     private JTextPane textPane;
     private StyleContext styleContext;
     private DefaultStyledDocument document;
-    private String currentLevelFile;  // ✅ Track current level file
+    private String currentLevelFile;
+    private Random random = new Random();
+    private Inventorydisplay inventoryDisplay;
 
     public Main() {
-        // ✅ Initialize document BEFORE loading the dungeon
         styleContext = new StyleContext();
         document = new DefaultStyledDocument(styleContext);
         
-        // ✅ Set up JTextPane
         textPane = new JTextPane();
         textPane.setFont(new Font("Monospaced", Font.PLAIN, 14));
         textPane.setEditable(false);
         textPane.setBackground(Color.BLACK);
-        textPane.setDocument(document); // ✅ Assign the document here
+        textPane.setDocument(document);
 
-        // ✅ Ensure the level file exists
-        currentLevelFile = "levels/level1.txt"; // ✅ Start at Level 1
+        currentLevelFile = "levels/level1.txt";
         File levelFile = new File(currentLevelFile);
         System.out.println("🔍 Looking for level file at: " + levelFile.getAbsolutePath());
 
@@ -37,13 +37,17 @@ public class Main extends JFrame {
             System.exit(1);
         }
 
-        // ✅ Now it's safe to load the level
         loadDungeon(currentLevelFile);
+        
+        // Create UI panel with buttons
+        JPanel buttonPanel = createButtonPanel();
 
-        // ✅ UI Setup
+        // Main panel setup
         add(new JScrollPane(textPane), BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+        
         setTitle("Rogue-like Dungeon");
-        setSize(400, 400);
+        setSize(600, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setFocusable(true);
         requestFocusInWindow();
@@ -53,16 +57,78 @@ public class Main extends JFrame {
             }
         });
 
-        // ✅ Setup keybindings
         setupKeyBindings();
-
+        
         setVisible(true);
     }
+    
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        
+        // Inventory button
+        JButton inventoryButton = new JButton("Inventory");
+        inventoryButton.addActionListener(e -> openInventory());
+        panel.add(inventoryButton);
+        
+        // Attack button
+        JButton attackButton = new JButton("Attack (F)");
+        attackButton.addActionListener(e -> {
+            Monster monster = dungeon.getMonsterAt(player.getX(), player.getY());
+            if (monster != null) {
+                player.attackMonster(monster);
+            }
+            processTurn();
+        });
+        panel.add(attackButton);
+        
+        // Use item button
+        JButton useItemButton = new JButton("Use Item");
+        useItemButton.addActionListener(e -> {
+            if (player.getInventory().isEmpty()) {
+                player.takeDamage(0); // Hack to update status message
+                player.getStatusMessage();
+                updateMapDisplay();
+                return;
+            }
+            
+            String[] options = player.getInventory().stream()
+                .map(item -> item.getName() + " - " + item.getDescription())
+                .toArray(String[]::new);
+                
+            int choice = JOptionPane.showOptionDialog(
+                this,
+                "Select an item to use:",
+                "Use Item",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+            );
+            
+            if (choice >= 0) {
+                player.useConsumable(choice);
+                processTurn();
+            }
+        });
+        panel.add(useItemButton);
+        
+        return panel;
+    }
+    
+    private void openInventory() {
+        if (inventoryDisplay == null || !inventoryDisplay.isDisplayable()) {
+            inventoryDisplay = new Inventorydisplay(player);
+            inventoryDisplay.setLocationRelativeTo(this);
+            inventoryDisplay.setVisible(true);
+        } else {
+            inventoryDisplay.toFront();
+        }
+    }
 
-    // ✅ Method to load the dungeon
     private void loadDungeon(String levelFile) {
         System.out.println("🔄 Loading dungeon from: " + levelFile);
-        currentLevelFile = levelFile;  // ✅ Track the current level
+        currentLevelFile = levelFile;
         dungeon = new Dungeon(levelFile);
 
         if (dungeon.getMap() == null || dungeon.getMap().length == 0) {
@@ -72,7 +138,18 @@ public class Main extends JFrame {
         }
 
         int[] playerStart = dungeon.getPlayerStartPosition();
+//<<<<<<< feature/item-packs-adarsh
+        
+        // Only create a new player object if one doesn't exist yet
+        if (player == null) {
+            player = new Player(playerStart, dungeon.getMap());
+        } else {
+            // Update player's map and position when changing levels
+            player.move('S'); // Trigger move to update the player's map reference
+        }
+
         // Objectizing Player Movement. bu Suhwan Kim. Feb 22
+        /*
         if (player == null) {
             player = new Player(playerStart, dungeon.getMap(), dungeon);
         } else {
@@ -83,8 +160,58 @@ public class Main extends JFrame {
         }
     
         player.setFloor(dungeon.getLevelNumber());
+        */
+//>>>>>>> main
         System.out.println("✅ Dungeon Loaded: " + levelFile);
+        
+        // Add some items to the dungeon for testing (in real game, these would be part of level files)
+        addRandomItemsToMap();
+        
         updateMapDisplay();
+    }
+    
+    private void addRandomItemsToMap() {
+        // Add some random consumable items to the map
+        char[][] map = dungeon.getMap();
+        int itemCount = 3 + random.nextInt(3); // 3-5 items
+        
+        for (int i = 0; i < itemCount; i++) {
+            // Find a random floor tile
+            int attempts = 0;
+            int maxAttempts = 100;
+            
+            while (attempts < maxAttempts) {
+                int x = random.nextInt(map[0].length);
+                int y = random.nextInt(map.length);
+                
+                if (map[y][x] == '.') {
+                    map[y][x] = '!'; // Item symbol
+                    break;
+                }
+                
+                attempts++;
+            }
+        }
+        
+        // Add some gold as well
+        int goldCount = 2 + random.nextInt(3); // 2-4 gold piles
+        
+        for (int i = 0; i < goldCount; i++) {
+            int attempts = 0;
+            int maxAttempts = 100;
+            
+            while (attempts < maxAttempts) {
+                int x = random.nextInt(map[0].length);
+                int y = random.nextInt(map.length);
+                
+                if (map[y][x] == '.') {
+                    map[y][x] = '$'; // Gold symbol
+                    break;
+                }
+                
+                attempts++;
+            }
+        }
     }
 
     private void updateMapDisplay() {
@@ -101,13 +228,22 @@ public class Main extends JFrame {
                     // Render the player with '@' if on the same tile
                     char tile = (x == playerX && y == playerY) ? '@' : displayMap[y][x];
                     Style style = styleContext.addStyle("Style", null);
+                    
+                    // Updated color scheme to include items and gold
                     switch (tile) {
                         case '#': StyleConstants.setForeground(style, Color.YELLOW); break;
                         case '.': StyleConstants.setForeground(style, Color.LIGHT_GRAY); break;
                         case '>': StyleConstants.setForeground(style, Color.CYAN); break;
                         case '<': StyleConstants.setForeground(style, Color.MAGENTA); break;
+                        case '@': StyleConstants.setForeground(style, Color.GREEN); break;
+                        case '!': StyleConstants.setForeground(style, Color.ORANGE); break; // Item
+                        case '$': StyleConstants.setForeground(style, Color.YELLOW); break; // Gold
+                        case 'Z': case 'B': case 'H': case 'C': case 'E': case 'A': 
+                        case 'L': case 'D': case 'K': case 'G': case 'Ω': case 'X':
+                            StyleConstants.setForeground(style, Color.RED); break; // Monsters
                         default: StyleConstants.setForeground(style, Color.WHITE); break;
                     }
+                    
                     document.insertString(document.getLength(), String.valueOf(tile), style);
                 }
                 document.insertString(document.getLength(), "\n", null);
@@ -115,6 +251,48 @@ public class Main extends JFrame {
     
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
+//<<<<<<< feature/item-packs-adarsh
+            
+            // Display legend
+            document.insertString(document.getLength(), "\n=== MAP LEGEND ===\n", statusStyle);
+            document.insertString(document.getLength(), "@ = Player | # = Wall | . = Floor | > = Stairs Down | < = Stairs Up\n", statusStyle);
+            document.insertString(document.getLength(), "! = Item | $ = Gold | Letters = Monsters\n", statusStyle);
+            
+            // Display player stats
+            document.insertString(document.getLength(), "\n=== PLAYER STATS ===\n", statusStyle);
+            document.insertString(document.getLength(), "LEVEL: " + currentLevel + 
+                                    " | HP: " + player.getHp() + 
+                                    " | Hunger: " + String.format("%.2f", player.getHunger()) + 
+                                    " | Strength: " + player.getStrength() +
+                                    " | Gold: " + player.getGold() +
+                                    " | Armor: " + player.getArmor() + "\n", statusStyle);
+            
+            // Display status message
+            document.insertString(document.getLength(), "▶ " + player.getStatusMessage() + "\n", statusStyle);
+            
+            // Display inventory summary
+            document.insertString(document.getLength(), "\n=== INVENTORY (" + player.getInventory().size() + " items) ===\n", statusStyle);
+            
+            // Show first few items
+            int maxDisplay = Math.min(3, player.getInventory().size());
+            for (int i = 0; i < maxDisplay; i++) {
+                Item item = player.getInventory().get(i);
+                document.insertString(document.getLength(), "- " + item.getName() + "\n", statusStyle);
+            }
+            
+            if (player.getInventory().size() > maxDisplay) {
+                document.insertString(document.getLength(), "- ... (" + (player.getInventory().size() - maxDisplay) + " more items)\n", statusStyle);
+            }
+            
+            if (player.getInventory().isEmpty()) {
+                document.insertString(document.getLength(), "- No items\n", statusStyle);
+            }
+            
+            // Display controls
+            document.insertString(document.getLength(), "\n=== CONTROLS ===\n", statusStyle);
+            document.insertString(document.getLength(), "WASD = Movement | F = Attack | I = Inventory\n", statusStyle);
+//=======
+  /*
             document.insertString(document.getLength(), 
                                 "\nFLOOR: " + player.getFloor() + 
                                 " | LEVEL: " + player.getLevel() + 
@@ -125,14 +303,14 @@ public class Main extends JFrame {
                                 " | Armor: " + player.getArmor() + 
                                 " | XP: " + player.getXp() + "/" + player.getXpToNextLevel(), statusStyle);
             document.insertString(document.getLength(), "\n" + player.getStatusMessage(), statusStyle);
+            */
+//>>>>>>> main
     
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
     }
     
-    
-    // ✅ Use KeyBindings instead of KeyListener
     private void setupKeyBindings() {
         InputMap inputMap = textPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = textPane.getActionMap();
@@ -184,16 +362,22 @@ public class Main extends JFrame {
                 if (monster != null) {
                     player.attackMonster(monster);
                 } else {
-                    // Update status message if no monster is present
-                    // (Assumes Player class has a way to update statusMessage, e.g., via attackMonster or another method.)
                     System.out.println("No monster here to attack!");
                 }
                 processTurn();
             }
         });
+        
+        // Inventory key binding (I key)
+        inputMap.put(KeyStroke.getKeyStroke("I"), "inventory");
+        actionMap.put("inventory", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openInventory();
+            }
+        });
     }
     
-    // ✅ Process a full turn: update monsters, check for level change, and update display
     private void processTurn() {
         // Let monsters take their turn
         dungeon.updateMonsters(player);
@@ -202,7 +386,6 @@ public class Main extends JFrame {
         checkForLevelChange();
     }
 
-    // ✅ Check if player needs to switch levels or if game is over
     private void checkForLevelChange() {
         int[] stairsUp = dungeon.getStairsUp();
         int[] stairsDown = dungeon.getStairsDown();

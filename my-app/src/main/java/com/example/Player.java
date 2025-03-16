@@ -1,56 +1,70 @@
-package com.example;
-
-import java.util.Random;
-
 public class Player {
     private int x, y;
     private int hp;
     private int maxHp;
     private double hunger;
-    private int floor;
+    private double maxHunger;
     private int level;
     private int strength;
+    private int baseStrength;
     private int gold;
     private int armor;
     private char[][] map;
     private String statusMessage;
-    private Dungeon dungeon;
-    private Random rand = new Random(); // Add Random for attack calculations
-    private int xp;
-    private int xpToNextLevel;
+    private Random rand = new Random();
+    
+    // Inventory fields
+    private List<Item> inventory;
+    private Item equippedWeapon;
+    private Item equippedArmor;
+    private int inventoryMaxSize = 10;
 
-    public Player(int[] startPosition, char[][] map, Dungeon dungeon) {
+    public Player(int[] startPosition, char[][] map) {
         this.x = startPosition[0];
         this.y = startPosition[1];
         this.map = map;
-        this.dungeon = dungeon;
-        this.floor = 1;
-        this.hp = 100;          // Initial HP
-        this.maxHp = 100;
-        this.hunger = 10.0;    // Initial Hunger
-        this.level = 1;        // ✅ Player starts at Level 1
-        this.strength = 10;     // Base Strength
-        this.gold = 0;         // No gold at start
-        this.armor = 0;        // No armor at start
-        this.xp = 0;
-        this.xpToNextLevel = 5; // need Exp
+        this.maxHp = 1000;
+        this.hp = maxHp;        
+        this.maxHunger = 1000.0; 
+        this.hunger = maxHunger;
+        this.level = 1;        
+        this.baseStrength = 5;
+        this.strength = baseStrength;
+        this.gold = 0;         
+        this.armor = 0;        
         this.statusMessage = "Welcome to the dungeon!";
+        this.inventory = new ArrayList<>();
+        
+        // Give the player a starting item (bread)
+        addItemToInventory(Item.createCommonConsumable("bread"));
     }
 
+    // Getters
     public int getX() { return x; }
     public int getY() { return y; }
     public int getHp() { return hp; }
+    public int getMaxHp() { return maxHp; }
     public double getHunger() { return hunger; }
+    public double getMaxHunger() { return maxHunger; }
     public int getLevel() { return level; }
-    public int getFloor() { return floor; }
     public int getStrength() { return strength; }
+    public int getBaseStrength() { return baseStrength; }
     public int getGold() { return gold; }
     public int getArmor() { return armor; }
     public String getStatusMessage() { return statusMessage; }
-    public int getXp() { return xp; }
-    public int getXpToNextLevel() { return xpToNextLevel; }
-    public int getMaxHp() { return maxHp; }
 
+    // Setters
+    public void setStatusMessage(String message) { this.statusMessage = message;}
+    
+    // Inventory getters
+    public List<Item> getInventory() { return inventory; }
+    public Item getEquippedWeapon() { return equippedWeapon; }
+    public Item getEquippedArmor() { return equippedArmor; }
+    public int getInventoryMaxSize() { return inventoryMaxSize; }
+
+    /**
+     * Move the player in the specified direction
+     */
     public void move(char direction) {
         if (hp <= 0) { 
             statusMessage = "You are dead! Cannot move.";
@@ -68,6 +82,7 @@ public class Player {
             default: return;
         }
 
+        // Check bounds
         if (newX < 0 || newY < 0 || newY >= map.length || newX >= map[0].length) {
             statusMessage = "You cannot move outside the dungeon!";
             return;
@@ -75,58 +90,50 @@ public class Player {
 
         char tile = map[newY][newX];
 
+        // Clear the player's old position
         if (map[y][x] == 'P') {
-            map[y][x] = '.';
+            map[y][x] = '.'; 
         }
 
-        if (tile == '#') {
-            statusMessage = "You cannot move through walls!";
+        // Move if not a wall
+        if (tile != '#') { 
+            x = newX;
+            y = newY;
+            decreaseHunger();
+            
+            // Handle special tiles
+            if (tile == '!') {
+                // Found an item
+                Item foundItem = ItemFactory.createRandomItem(level);
+                if (addItemToInventory(foundItem)) {
+                    map[newY][newX] = '.'; // Remove item from map
+                }
+            } else if (tile == '$') {
+                // Found gold
+                int goldAmount = 5 + rand.nextInt(level * 5);
+                addGold(goldAmount);
+                map[newY][newX] = '.'; // Remove gold from map
+            }
+        } else {
+            statusMessage = "You bump into a wall.";
             return;
         }
-    
-        // Check if new position has a monster
-        Monster monster = dungeon.getMonsterAt(newX, newY);
-        if (monster != null && monster.isAlive()) {
-            // Players and monsters damage each other during collisions
-            int playerDamage = calculateAttackDamage();
-            monster.takeDamage(playerDamage);
-            statusMessage = "You attack " + monster.getName() + " for " + playerDamage + " damage!";
-    
-            int monsterDamage = monster.calculateAttackDamage();
-            this.takeDamage(monsterDamage);
-            statusMessage += " " + monster.getName() + " attacks you for " + monsterDamage + " damage!";
-    
-            // Check if a monster is dead
-            if (!monster.isAlive()) {
-                statusMessage += " You defeated " + monster.getName() + "!";
-            }
-    
-            return; // Not moving when colliding with monsters
-        }
-    
-        // Move player
-        x = newX;
-        y = newY;
-        decreaseHunger();
-    
-        // Check for stairs or other special tiles
+
+        // Handle stairs
         if (tile == '>') {
             statusMessage = "Going down to the next floor!";
-            floor++; 
-            System.out.println("🔽 Moving to Level " + floor + "...");
-            loadNewDungeon("levels/level" + floor + ".txt");
         } else if (tile == '<') {
-            if (floor > 1) {
+            if (level > 1) {
                 statusMessage = "Going up to the previous floor!";
-                floor--; 
-                System.out.println("🔼 Moving to Level " + floor + "...");
-                loadNewDungeon("levels/level" + floor + ".txt"); 
             } else {
                 statusMessage = "You are already at the top floor!";
             }
         }
     }
 
+    /**
+     * Decrease the player's hunger over time
+     */
     private void decreaseHunger() {
         hunger -= 0.1; // Hunger slowly decreases
         if (hunger <= 0) {
@@ -137,10 +144,9 @@ public class Player {
     }
 
     /**
-     * Modified takeDamage method for Player that accounts for armor
+     * Take damage, accounting for armor
      */
     public void takeDamage(int amount) {
-        
         int reducedDamage = Math.max(1, amount - (armor / 2));
         hp -= reducedDamage;
         
@@ -153,7 +159,7 @@ public class Player {
     }
 
     /**
-     * Method for attacking monsters
+     * Attack a monster
      */
     public void attackMonster(Monster monster) {
         if (monster == null || !monster.isAlive()) {
@@ -161,24 +167,256 @@ public class Player {
             return;
         }
         
+        // Calculate damage based on strength
         int damage = strength + rand.nextInt(3);
+        
         monster.takeDamage(damage);
         statusMessage = "You attack " + monster.getName() + " for " + damage + " damage!";
         
+        // Handle monster defeat
         if (!monster.isAlive()) {
             int expGained = monster.getExpValue();
             int goldGained = monster.getExpValue() / 3;
             
             this.gold += goldGained;
-            this.gainXp(expGained);
-            statusMessage = "You defeated " + monster.getName() + "! Gained " + goldGained + " gold and " + expGained + " XP.";
-
-            if (rand.nextDouble() < 0.25) {
-                statusMessage += " You found an item!";
+            statusMessage = "You defeated " + monster.getName() + "! Gained " + goldGained + " gold.";
+            
+            // Chance to drop an item when monster is defeated
+            if (rand.nextDouble() < 0.35) {
+                Item droppedItem = ItemFactory.createRandomItem(level);
+                addItemToInventory(droppedItem);
+                statusMessage += " You found " + droppedItem.getName() + "!";
             }
         }
     }
-
+    
+    // ======= INVENTORY METHODS =======
+    
+    /**
+     * Add an item to the player's inventory
+     */
+    public boolean addItemToInventory(Item item) {
+        if (inventory.size() >= inventoryMaxSize) {
+            statusMessage = "Your inventory is full! Cannot pick up " + item.getName();
+            return false;
+        }
+        
+        inventory.add(item);
+        statusMessage = "Added " + item.getName() + " to inventory.";
+        return true;
+    }
+    
+    /**
+     * Remove an item from the player's inventory
+     */
+    public boolean removeItemFromInventory(int index) {
+        if (index < 0 || index >= inventory.size()) {
+            statusMessage = "Invalid inventory index!";
+            return false;
+        }
+        
+        Item removed = inventory.remove(index);
+        statusMessage = "Removed " + removed.getName() + " from inventory.";
+        return true;
+    }
+    
+    /**
+     * Use a consumable item from inventory
+     */
+    public boolean useConsumable(int index) {
+        if (index < 0 || index >= inventory.size()) {
+            statusMessage = "Invalid inventory index!";
+            return false;
+        }
+        
+        Item item = inventory.get(index);
+        
+        if (!item.isConsumable()) {
+            statusMessage = item.getName() + " is not consumable!";
+            return false;
+        }
+        
+        // Apply item effect
+        String effect = item.getEffect();
+        int value = item.getEffectValue();
+        
+        switch (effect) {
+            case "health":
+                int oldHp = hp;
+                hp = Math.min(maxHp, hp + value);
+                statusMessage = "You used " + item.getName() + " and restored " + (hp - oldHp) + " health.";
+                break;
+                
+            case "hunger":
+                double oldHunger = hunger;
+                hunger = Math.min(maxHunger, hunger + value);
+                statusMessage = "You consumed " + item.getName() + " and restored " + 
+                               String.format("%.1f", (hunger - oldHunger)) + " hunger.";
+                break;
+                
+            case "strength":
+                strength = baseStrength + value;
+                statusMessage = "You used " + item.getName() + " and temporarily gained " + value + " strength!";
+                // Note: This would ideally have a duration, but we'll keep it simple for now
+                break;
+                
+            default:
+                statusMessage = "You used " + item.getName() + " but nothing happened.";
+                break;
+        }
+        
+        // Remove the item after use
+        inventory.remove(index);
+        return true;
+    }
+    
+    /**
+     * Equip weapon from inventory
+     */
+    public boolean equipWeapon(int index) {
+        if (index < 0 || index >= inventory.size()) {
+            statusMessage = "Invalid inventory index!";
+            return false;
+        }
+        
+        Item item = inventory.get(index);
+        
+        if (!item.getType().equals("weapon")) {
+            statusMessage = item.getName() + " is not a weapon!";
+            return false;
+        }
+        
+        // Unequip current weapon if any
+        if (equippedWeapon != null) {
+            // Remove strength bonus from old weapon
+            strength = baseStrength;
+            // Add old weapon back to inventory
+            inventory.add(equippedWeapon);
+        }
+        
+        // Equip new weapon
+        equippedWeapon = item;
+        inventory.remove(index);
+        
+        // Add strength bonus from new weapon
+        strength = baseStrength + equippedWeapon.getEffectValue();
+        
+        statusMessage = "Equipped " + equippedWeapon.getName() + " (+" + equippedWeapon.getEffectValue() + " strength)";
+        return true;
+    }
+    
+    /**
+     * Unequip current weapon
+     */
+    public boolean unequipWeapon() {
+        if (equippedWeapon == null) {
+            statusMessage = "You don't have a weapon equipped!";
+            return false;
+        }
+        
+        if (inventory.size() >= inventoryMaxSize) {
+            statusMessage = "Your inventory is full! Cannot unequip weapon.";
+            return false;
+        }
+        
+        // Add weapon to inventory
+        inventory.add(equippedWeapon);
+        
+        // Reset strength
+        strength = baseStrength;
+        
+        // Clear equipped weapon
+        String weaponName = equippedWeapon.getName();
+        equippedWeapon = null;
+        
+        statusMessage = "Unequipped " + weaponName + ".";
+        return true;
+    }
+    
+    /**
+     * Equip armor from inventory
+     */
+    public boolean equipArmor(int index) {
+        if (index < 0 || index >= inventory.size()) {
+            statusMessage = "Invalid inventory index!";
+            return false;
+        }
+        
+        Item item = inventory.get(index);
+        
+        if (!item.getType().equals("armor")) {
+            statusMessage = item.getName() + " is not armor!";
+            return false;
+        }
+        
+        // Unequip current armor if any
+        if (equippedArmor != null) {
+            // Remove armor bonus
+            armor = 0;
+            // Add old armor back to inventory
+            inventory.add(equippedArmor);
+        }
+        
+        // Equip new armor
+        equippedArmor = item;
+        inventory.remove(index);
+        
+        // Add armor bonus
+        armor = equippedArmor.getEffectValue();
+        
+        statusMessage = "Equipped " + equippedArmor.getName() + " (+" + equippedArmor.getEffectValue() + " armor)";
+        return true;
+    }
+    
+    /**
+     * Unequip current armor
+     */
+    public boolean unequipArmor() {
+        if (equippedArmor == null) {
+            statusMessage = "You don't have armor equipped!";
+            return false;
+        }
+        
+        if (inventory.size() >= inventoryMaxSize) {
+            statusMessage = "Your inventory is full! Cannot unequip armor.";
+            return false;
+        }
+        
+        // Add armor to inventory
+        inventory.add(equippedArmor);
+        
+        // Reset armor
+        armor = 0;
+        
+        // Clear equipped armor
+        String armorName = equippedArmor.getName();
+        equippedArmor = null;
+        
+        statusMessage = "Unequipped " + armorName + ".";
+        return true;
+    }
+    
+    /**
+     * Drop an item from inventory onto the ground
+     */
+    public boolean dropItem(int index) {
+        if (index < 0 || index >= inventory.size()) {
+            statusMessage = "Invalid inventory index!";
+            return false;
+        }
+        
+        Item item = inventory.remove(index);
+        statusMessage = "Dropped " + item.getName() + " on the ground.";
+        
+        // Ideally we would place the item on the map here
+        // but for simplicity we'll just remove it
+        
+        return true;
+    }
+    
+    /**
+     * Load a new dungeon level
+     */
     private void loadNewDungeon(String levelFile) {
         System.out.println("🔄 Loading new dungeon from: " + levelFile);
     
@@ -190,13 +428,13 @@ public class Player {
             return;
         }
     
-        this.floor = newDungeon.getLevelNumber();
+        this.level = newDungeon.getLevelNumber();
+        this.map = newDungeon.getMap();
     
         if (map[y][x] == '@') {
             map[y][x] = '.';
         }
     
-        this.map = newDungeon.getMap();
         int[] startPos = newDungeon.getPlayerStartPosition();
         this.x = startPos[0];
         this.y = startPos[1];
@@ -205,71 +443,54 @@ public class Player {
         statusMessage = "You have entered Level " + level + "!";
     }
 
+    /**
+     * Add gold to the player
+     */
     public void addGold(int amount) {
         gold += amount;
         statusMessage = "You found " + amount + " gold!";
     }
-
-    public void equipArmor(int armorValue) {
-        armor += armorValue;
-        statusMessage = "You equipped armor! Defense +" + armorValue;
-    }
-
-    public void increaseStrength(int amount) {
-        strength += amount;
-        statusMessage = "You feel stronger! Strength +" + amount;
-    }
-
-    public int calculateAttackDamage() {
-        return strength + rand.nextInt(3);
-    }
-
-    public void gainXp(int amount) {
-        xp += amount;
-        statusMessage = "You gained " + amount + " XP!";
     
-        if (xp >= xpToNextLevel) {
-            levelUp();
+    /**
+     * Increase max HP (e.g., when leveling up)
+     */
+    public void increaseMaxHp(int amount) {
+        maxHp += amount;
+        hp += amount; // Also heal by the same amount
+        statusMessage = "Your maximum HP increased by " + amount + "!";
+    }
+    
+    /**
+     * Increase base strength (e.g., when leveling up)
+     */
+    public void increaseBaseStrength(int amount) {
+        baseStrength += amount;
+        
+        // Update current strength if no weapon is equipped or add to weapon bonus
+        if (equippedWeapon == null) {
+            strength = baseStrength;
+        } else {
+            strength = baseStrength + equippedWeapon.getEffectValue();
         }
+        
+        statusMessage = "Your base strength increased by " + amount + "!";
     }
     
-    // Level up logic
-    private void levelUp() {
-        level++;
-        xp -= xpToNextLevel;
-        xpToNextLevel = (int) (xpToNextLevel * 1.5);
-        strength += 2;
-        maxHp += 10;
-        hp = maxHp;
-        statusMessage = "You leveled up! You are now level " + level + "!";
-    }
-
-    // Objectizing Player Movement. bu Suhwan Kim. Feb 22
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
+    /**
+     * Heal the player
+     */
+    public void heal(int amount) {
+        int oldHp = hp;
+        hp = Math.min(maxHp, hp + amount);
+        statusMessage = "You healed for " + (hp - oldHp) + " HP!";
     }
     
-    public void setMap(char[][] map) {
-        this.map = map;
-    }
-
-    public void setDungeon(Dungeon dungeon) {
-        this.dungeon = dungeon;
-    }
-
-    public void setStatusMessage(String statusMessage) {
-        this.statusMessage = statusMessage;
-    }
-
-    public void setFloor(int floor) {
-        this.floor = floor; 
-    }
-
-    public void setLevel(int level) {
-        this.level = level; 
+    /**
+     * Restore hunger
+     */
+    public void restoreHunger(double amount) {
+        double oldHunger = hunger;
+        hunger = Math.min(maxHunger, hunger + amount);
+        statusMessage = "You restored " + String.format("%.1f", (hunger - oldHunger)) + " hunger!";
     }
 }
