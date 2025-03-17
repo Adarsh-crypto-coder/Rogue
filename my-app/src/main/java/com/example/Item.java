@@ -20,12 +20,12 @@ public class Item {
      */
     private boolean isIdentified;
     private String realName; // Real name of scroll
+    private String realDescription; // Real description of scroll
     
     public Item(String name, String type, String description, int value, 
                 boolean isConsumable, String effect, int effectValue, char symbol) {
-        this.name = name;
         this.type = type;
-        this.description = description;
+        this.realDescription = description;
         this.value = value;
         this.isConsumable = isConsumable;
         this.effect = effect;
@@ -33,25 +33,36 @@ public class Item {
         this.symbol = symbol;
         this.isIdentified = !type.equals("scroll"); // if not scroll, always identified
         this.realName = name;
+
+        if (type.equals("scroll") && !isIdentified) {
+            this.name = generateRandomScrollName();
+            this.description = "A mysterious scroll with unknown effects.";
+        } else {
+            this.name = realName;
+            this.description = realDescription;
+        }
     }
     
     // Getters
-    public String getName() { return name; }
     public String getType() { return type; }
-    public String getDescription() { return description; }
     public int getValue() { return value; }
     public boolean isConsumable() { return isConsumable; }
     public String getEffect() { return effect; }
     public int getEffectValue() { return effectValue; }
     public char getSymbol() { return symbol; }
-    public boolean isIdentified() { return isIdentified; }
     public String getRealName() { return realName; }
+    public String getName() {
+        return isIdentified ? realName : name;
+    }
+    public String getDescription() {
+        return isIdentified ? realDescription : description;
+    }
+    public boolean isIdentified() {
+        return isIdentified;
+    }
     
     @Override
     public String toString() {
-        if (type.equals("scroll") && !isIdentified) {
-            return generateRandomScrollName();
-        }
         return name + " (" + description + ")";
     }
     
@@ -109,7 +120,11 @@ public class Item {
     }
 
     public void identify() {
-        this.isIdentified = true;
+        if (type.equals("scroll") && !isIdentified) {
+            this.name = realName;
+            this.description = realDescription;
+            this.isIdentified = true;
+        }
     }
 
     private String generateRandomScrollName() {
