@@ -597,7 +597,7 @@ public class Player {
                 gentleStrength = strength;
                 berserkStrength = strength*2;
                 strength = berserkStrength;
-                statusMessage = "All monsters on this level have been vanquished!";
+                statusMessage = "Your Strength has doubled for this level!";
                 break;
             default:
                 statusMessage = "The scroll had no effect.";
