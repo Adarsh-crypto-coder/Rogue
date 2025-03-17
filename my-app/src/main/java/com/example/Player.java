@@ -1,18 +1,23 @@
 package com.example;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Player {
     private int x, y;
     private int hp;
     private int maxHp;
+    private int baseMaxHp;
     private double hunger;
     private double maxHunger;
     private int level;
     private int strength;
     private int baseStrength;
+    private int berserkStrength;
+    private int gentleStrength;
     private int gold;
     private int armor;
     private int exp;
@@ -20,6 +25,7 @@ public class Player {
     private char[][] map;
     private String statusMessage;
     private Random rand = new Random();
+    private int currentLevel;
     
     // Inventory fields
     private List<Item> inventory;
@@ -27,23 +33,34 @@ public class Player {
     private Item equippedArmor;
     private int inventoryMaxSize = 10;
 
-    public Player(int[] startPosition, char[][] map) {
+    // Identified Scrolls
+    private Map<String, String> identifiedScrolls;
+
+    private Dungeon dungeon;
+
+    public Player(int[] startPosition, char[][] map, Dungeon dungeon) {
         this.x = startPosition[0];
         this.y = startPosition[1];
         this.map = map;
-        this.maxHp = 1000;
+        this.baseMaxHp = 1000;
+        this.maxHp = baseMaxHp;
         this.hp = maxHp;        
         this.maxHunger = 100.0; 
         this.hunger = maxHunger;
         this.level = 1;        
         this.baseStrength = 3;
         this.strength = baseStrength;
+        this.berserkStrength = strength*2;
+        this.gentleStrength = strength;
         this.gold = 0;         
         this.armor = 0;        
         this.exp = 0;
         this.expToNextLevel = 10;
         this.statusMessage = "Welcome to the dungeon!";
         this.inventory = new ArrayList<>();
+        this.identifiedScrolls = new HashMap<>();
+        this.dungeon = dungeon;
+        this.currentLevel = dungeon.getLevelNumber();
         
         // Give the player a starting item (bread)
         addItemToInventory(Item.createCommonConsumable("bread"));
@@ -256,6 +273,15 @@ public class Player {
         if (!item.isConsumable()) {
             statusMessage = item.getName() + " is not consumable!";
             return false;
+        }
+
+        // effect of scrolls
+        if (item.getType().equals("scroll")) {
+            applyScrollEffect(item);
+            item.identify();
+            identifiedScrolls.put(item.getRealName(), item.getEffect());
+            inventory.remove(index);
+            return true;
         }
         
         // Apply item effect
@@ -538,11 +564,54 @@ public class Player {
         expToNextLevel = (int) (expToNextLevel * 1.5); // Increase the exp needed for next level
         
         // Increase player stats
-        maxHp += 20;
+        baseMaxHp += 20;
+        maxHp = baseMaxHp;
         hp = maxHp; // Fully heal the player
         baseStrength += 2;
         strength = baseStrength; // Update strength
         
         statusMessage = "You leveled up to level " + level + "!";
+    }
+
+    private void applyScrollEffect(Item scroll) {
+        if (dungeon == null) {
+            statusMessage = "Error: Dungeon not initialized!";
+            return;
+        }
+
+        switch (scroll.getEffect()) {
+            case "giant":
+                maxHp *= 2;
+                hp = maxHp;
+                statusMessage = "Your max HP has doubled for this level!";
+                break;
+            case "berserk":
+                gentleStrength = strength;
+                berserkStrength = strength*2;
+                strength = berserkStrength;
+                statusMessage = "All monsters on this level have been vanquished!";
+                break;
+            default:
+                statusMessage = "The scroll had no effect.";
+        }
+    }
+
+    public void onLevelChange(int newLevel) {
+        if (this.currentLevel != newLevel) {
+            resetScrollEffects();
+            this.currentLevel = newLevel;
+        }
+    }
+
+    private void resetScrollEffects() {
+        if (maxHp > baseMaxHp) { // Giant's Scroll effect reset
+            maxHp = baseMaxHp;
+            hp = Math.min(hp, maxHp);
+        }
+
+        if (strength > baseStrength) { // Berserk Scroll effect reset
+            strength = baseStrength;
+        }
+        // Another Scroll effects reset
     }
 }

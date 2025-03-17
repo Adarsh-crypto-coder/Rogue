@@ -14,8 +14,8 @@ public class ItemFactory {
     public static Item createRandomItem(int dungeonLevel) {
         double roll = rand.nextDouble();
         
-        // Higher chance for consumables (70%)
-        if (roll < 0.7) {
+        // Higher chance for consumables (60%)
+        if (roll < 0.6) {
             return createRandomConsumable(dungeonLevel);
         } 
         // Some chance for armor (15%)
@@ -23,8 +23,12 @@ public class ItemFactory {
             return createArmor(dungeonLevel);
         } 
         // Some chance for weapon (15%)
-        else {
+        else if (roll < 0.85) {
             return createWeapon(dungeonLevel);
+        } 
+        // Some chance for scroll
+        else {
+            return createScroll(dungeonLevel);
         }
     }
     
@@ -113,5 +117,32 @@ public class ItemFactory {
             strengthValue,
             'W'
         );
+    }
+
+    /**
+     * Creates Magic Scrolls
+     */
+    public static Item createScroll(int dungeonLevel) {
+        String[] scrollEffects = {"giant", "berserk"};
+        String effect = scrollEffects[rand.nextInt(scrollEffects.length)];
+        String name;
+        String description;
+        int value = 50 * dungeonLevel;
+
+        switch (effect) {
+            case "giant":
+                name = "Giant's Scroll";
+                description = "Doubles your max HP for the current level.";
+                break;
+            case "berserk":
+                name = "berserk Scroll";
+                description = "Doubles your strength for the current level.";
+                break;
+            default:
+                name = "Mysterious Scroll";
+                description = "A scroll with unknown effects.";
+        }
+
+        return new Item(name, "scroll", description, value, true, effect, 0, '?');
     }
 }

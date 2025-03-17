@@ -1,17 +1,25 @@
 package com.example;
 
+import java.util.Random;
+
 /**
  * Represents an item in the game
  */
 public class Item {
     private String name;
-    private String type; // "consumable", "weapon", "armor", etc.
+    private String type; // "consumable", "weapon", "armor", "scroll", etc.
     private String description;
     private int value; // Gold value
     private boolean isConsumable;
-    private String effect; // Effect type: "health", "hunger", "strength", etc.
+    private String effect; // Effect type: "health", "hunger", "strength", "giant", "berserk", etc.
     private int effectValue; // Amount the effect changes the stat
     private char symbol; // Character representation on map
+
+    /**
+     * Scroll Identified boolean
+     */
+    private boolean isIdentified;
+    private String realName; // Real name of scroll
     
     public Item(String name, String type, String description, int value, 
                 boolean isConsumable, String effect, int effectValue, char symbol) {
@@ -23,6 +31,8 @@ public class Item {
         this.effect = effect;
         this.effectValue = effectValue;
         this.symbol = symbol;
+        this.isIdentified = !type.equals("scroll"); // if not scroll, always identified
+        this.realName = name;
     }
     
     // Getters
@@ -34,9 +44,14 @@ public class Item {
     public String getEffect() { return effect; }
     public int getEffectValue() { return effectValue; }
     public char getSymbol() { return symbol; }
+    public boolean isIdentified() { return isIdentified; }
+    public String getRealName() { return realName; }
     
     @Override
     public String toString() {
+        if (type.equals("scroll") && !isIdentified) {
+            return generateRandomScrollName();
+        }
         return name + " (" + description + ")";
     }
     
@@ -91,5 +106,18 @@ public class Item {
             default:
                 return createConsumable("Strange Herb", "health", 1);
         }
+    }
+
+    public void identify() {
+        this.isIdentified = true;
+    }
+
+    private String generateRandomScrollName() {
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            sb.append((char) (rand.nextInt(26) + 'A'));
+        }
+        return sb.toString() + " Scroll";
     }
 }

@@ -36,8 +36,8 @@ public class Main extends JFrame {
             JOptionPane.showMessageDialog(this, "Level file not found!", "Error", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
-
-        player = new Player(new int[]{1, 1}, new char[0][0]); 
+        dungeon = new Dungeon(currentLevelFile);
+        player = new Player(new int[]{1, 1}, new char[0][0], dungeon); 
         loadDungeon(currentLevelFile);
         
         // Create UI panel with buttons
@@ -142,15 +142,6 @@ public class Main extends JFrame {
         player.setPosition(playerStart[0], playerStart[1]);
         player.setMap(dungeon.getMap());
         
-        /* 
-        // Only create a new player object if one doesn't exist yet
-        if (player == null) {
-            player = new Player(playerStart, dungeon.getMap());
-        } else {
-            // Update player's map and position when changing levels
-            player.move('S'); // Trigger move to update the player's map reference
-        }
-        */
         System.out.println("✅ Dungeon Loaded: " + levelFile);
         
         // Add some items to the dungeon for testing (in real game, these would be part of level files)
@@ -238,7 +229,7 @@ public class Main extends JFrame {
                 document.insertString(document.getLength(), "\n", null);
             }
     
-            int currentLevel = dungeon.getLevelNumber();
+            int currentFloor = dungeon.getLevelNumber();
             Style statusStyle = styleContext.addStyle("StatusStyle", null);
             StyleConstants.setForeground(statusStyle, Color.WHITE);
             
@@ -249,7 +240,8 @@ public class Main extends JFrame {
             
             // Display player stats
             document.insertString(document.getLength(), "\n=== PLAYER STATS ===\n", statusStyle);
-            document.insertString(document.getLength(), "LEVEL: " + currentLevel + 
+            document.insertString(document.getLength(), "FLOOR: " + currentFloor + 
+                                    " | LEVEL: " + player.getLevel() + 
                                     " | HP: " + player.getHp() + 
                                     " | Hunger: " + String.format("%.2f", player.getHunger()) + 
                                     " | Strength: " + player.getStrength() +
@@ -370,6 +362,7 @@ public class Main extends JFrame {
             File nextLevelFile = new File("levels/level" + nextLevel + ".txt");
             if (nextLevelFile.exists()) {
                 System.out.println("🔽 Moving to Level " + nextLevel + "...");
+                player.onLevelChange(nextLevel);
                 loadDungeon(nextLevelFile.getPath());
                 return;
             } else if (dungeon.isLastLevel()) {
@@ -383,6 +376,7 @@ public class Main extends JFrame {
                 File prevLevelFile = new File("levels/level" + prevLevel + ".txt");
                 if (prevLevelFile.exists()) {
                     System.out.println("🔼 Moving to Level " + prevLevel + "...");
+                    player.onLevelChange(prevLevel);
                     loadDungeon(prevLevelFile.getPath());
                     return;
                 }
