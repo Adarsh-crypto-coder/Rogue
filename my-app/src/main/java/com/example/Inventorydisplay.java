@@ -235,6 +235,8 @@ public class Inventorydisplay extends JFrame {
             typeInfo = " [Weapon]";
         } else if (item.getType().equals("armor")) {
             typeInfo = " [Armor]";
+        } else if (item.getType().equals("scroll")) {
+            typeInfo = " [Scroll]";
         }
         
         JLabel itemLabel = new JLabel(item.getName() + typeInfo);
