@@ -19,15 +19,15 @@ public class ItemFactory {
             return createRandomConsumable(dungeonLevel);
         } 
         // Some chance for armor (15%)
-        else if (roll < 0.85) {
+        else if (roll < 0.75) { // 0.6 ~ 0.75 (15%)
             return createArmor(dungeonLevel);
         } 
         // Some chance for weapon (15%)
-        else if (roll < 0.85) {
+        else if (roll < 0.9) { // 0.75 ~ 0.9 (15%)
             return createWeapon(dungeonLevel);
         } 
-        // Some chance for scroll
-        else {
+        // Some chance for scroll (10%)
+        else { // 0.9 ~ 1.0 (10%)
             return createScroll(dungeonLevel);
         }
     }
