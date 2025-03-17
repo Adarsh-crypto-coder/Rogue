@@ -239,6 +239,14 @@ public class Player {
             statusMessage = "Your inventory is full! Cannot pick up " + item.getName();
             return false;
         }
+
+        if (item.getType().equals("scroll")) {
+            String scrollEffect = item.getEffect();
+            if (identifiedScrolls.containsKey(scrollEffect)) {
+                // 이미 식별된 스크롤인 경우 실제 이름과 설명 사용
+                item.identify();
+            }
+        }
         
         inventory.add(item);
         statusMessage = "Added " + item.getName() + " to inventory.";
